@@ -52,11 +52,9 @@ from aurora_unicycler._formats import (
     battinfo,
     biologic,
     neware,
+    palmsens as palmsens_format,
     pybamm,
     tomato,
-)
-from aurora_unicycler._formats import (
-    palmsens as palmsens_format,
 )
 from aurora_unicycler.palmsens import PalmSensDevice
 
@@ -191,16 +189,16 @@ class CyclingProtocol(BaseProtocol):
 
         """
         return palmsens_format.to_palmsens_methodscript(
-            protocol=self,
-            save_path=save_path,
-            sample_name=sample_name,
-            capacity_mAh=capacity_mAh,
-            device=device,
-            channel=channel,
-            scan_step_voltage_V=scan_step_voltage_V,
-            eis_dc_potential_V=eis_dc_potential_V,
-            eis_dc_current_mA=eis_dc_current_mA,
-            additional_measurements=additional_measurements,
+            self,
+            save_path,
+            sample_name,
+            capacity_mAh,
+            device,
+            channel,
+            scan_step_voltage_V,
+            eis_dc_potential_V,
+            eis_dc_current_mA,
+            additional_measurements,
         )
 
     def to_tomato_mpg2(

@@ -154,30 +154,6 @@ class Step(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class Temperature(Step): #TODO: lägg kontroll av temperatur i varje format
-    """Temperature control step.
-
-    Attributes:
-        until_temp_c: Target temperature in degrees Celsius.
-        wait_after_s: Duration of the temperature step timer.
-        wait_start: Whether the timer starts with the step or at the target temperature.
-        ramp_rate: Rate of temperature increase
-
-    """
-
-    step: Literal["temperature"] = Field(default="temperature", frozen=True)
-    until_temp_c: float = Field(description="Target temperature in degrees Celsius")
-    wait_after_s: float = Field(gt=0)
-    wait_start: Literal["target_reached", "step_start"] = "step_start"
-    ramp_rate: float | None = Field(gt=0) # default: float rampRate = 0.35 /60; // °C per minute ( /60)
-
-    @field_validator("until_temp_c", "wait_after_s", mode="before")
-    @classmethod
-    def _allow_empty_string(cls, v: float | str) -> float | None:
-        """Empty string is interpreted as None."""
-        return _empty_string_is_none(v)
-
-
 class OpenCircuitVoltage(Step):
     """Open circuit voltage step.
 
@@ -211,7 +187,6 @@ class ConstantCurrent(Step):
         current_mA: (optional) The current applied in mA.
         until_time_s: Duration of step in seconds.
         until_voltage_V: End step when this voltage in V is reached.
-        stop_voltage_reference: Electrode reference used for the voltage stop condition.
 
     """
 
@@ -220,7 +195,6 @@ class ConstantCurrent(Step):
     current_mA: float | None = None
     until_time_s: float | None = None
     until_voltage_V: float | None = None
-    stop_voltage_reference: Literal["we_vs_re", "we_vs_ce"] = "we_vs_re"
 
     @field_validator("rate_C", mode="before")
     @classmethod
@@ -326,6 +300,9 @@ class ImpedanceSpectroscopy(Step):
     step: Literal["impedance_spectroscopy"] = Field(default="impedance_spectroscopy", frozen=True)
     amplitude_V: float | None = None
     amplitude_mA: float | None = None
+    dc_potential_V: float | None = None
+    dc_current_mA: float | None = None
+    dc_vs_ocv: bool = True
     start_frequency_Hz: float = Field(ge=1e-5, le=1e7, description="Start frequency in Hz")
     end_frequency_Hz: float = Field(ge=1e-5, le=1e7, description="End frequency in Hz")
     points_per_decade: int = Field(gt=0, default=10)
@@ -333,7 +310,13 @@ class ImpedanceSpectroscopy(Step):
     drift_correction: bool | None = Field(default=False, description="Apply drift correction")
     model_config = ConfigDict(extra="forbid")
 
-    @field_validator("amplitude_V", "amplitude_mA", mode="before")
+    @field_validator(
+        "amplitude_V",
+        "amplitude_mA",
+        "dc_potential_V",
+        "dc_current_mA",
+        mode="before",
+    )
     @classmethod
     def _allow_empty_string(cls, v: float | str) -> float | None:
         """Empty string is interpreted as None."""
@@ -456,8 +439,7 @@ class Tag(Step):
 
 
 AnyTechnique = Annotated[
-    Temperature
-    | OpenCircuitVoltage
+    OpenCircuitVoltage
     | ConstantCurrent
     | ConstantVoltage
     | ImpedanceSpectroscopy
