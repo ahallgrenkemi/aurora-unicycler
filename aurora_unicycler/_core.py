@@ -326,6 +326,9 @@ class ImpedanceSpectroscopy(Step):
     step: Literal["impedance_spectroscopy"] = Field(default="impedance_spectroscopy", frozen=True)
     amplitude_V: float | None = None
     amplitude_mA: float | None = None
+    dc_potential_V: float | None = None
+    dc_current_mA: float | None = None
+    dc_vs_ocv: bool = True
     start_frequency_Hz: float = Field(ge=1e-5, le=1e7, description="Start frequency in Hz")
     end_frequency_Hz: float = Field(ge=1e-5, le=1e7, description="End frequency in Hz")
     points_per_decade: int = Field(gt=0, default=10)
@@ -333,7 +336,13 @@ class ImpedanceSpectroscopy(Step):
     drift_correction: bool | None = Field(default=False, description="Apply drift correction")
     model_config = ConfigDict(extra="forbid")
 
-    @field_validator("amplitude_V", "amplitude_mA", mode="before")
+    @field_validator(
+        "amplitude_V",
+        "amplitude_mA",
+        "dc_potential_V",
+        "dc_current_mA",
+        mode="before",
+    )
     @classmethod
     def _allow_empty_string(cls, v: float | str) -> float | None:
         """Empty string is interpreted as None."""
