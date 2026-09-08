@@ -165,8 +165,6 @@ class CyclingProtocol(BaseProtocol):
         device: PalmSensDevice | str = PalmSensDevice.EMSTAT4_HR,
         channel: int = 0,
         scan_step_voltage_V: float | None = None,  # noqa: N803
-        eis_dc_potential_V: float = 0.0,  # noqa: N803
-        eis_dc_current_mA: float = 0.0,  # noqa: N803
         additional_measurements: tuple[str, ...] = (),
     ) -> str:
         """Convert protocol to PalmSens MethodSCRIPT.
@@ -181,8 +179,6 @@ class CyclingProtocol(BaseProtocol):
                 should be supported on all supported instruments.
             scan_step_voltage_V: Voltage step size for voltage scans. If unset,
                 `record.voltage_V` is used.
-            eis_dc_potential_V: DC potential offset for potentiostatic EIS.
-            eis_dc_current_mA: DC current offset for galvanostatic EIS.
             additional_measurements: optional MethodSCRIPT variable type IDs to
                 measure with `add_meas`, such as `("ba",)`.
 
@@ -198,8 +194,6 @@ class CyclingProtocol(BaseProtocol):
             device=device,
             channel=channel,
             scan_step_voltage_V=scan_step_voltage_V,
-            eis_dc_potential_V=eis_dc_potential_V,
-            eis_dc_current_mA=eis_dc_current_mA,
             additional_measurements=additional_measurements,
         )
 

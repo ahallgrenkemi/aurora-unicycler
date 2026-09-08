@@ -152,9 +152,7 @@ class _Renderer:
             ):
                 vars_to_declare.extend(("p", "i"))
             elif isinstance(step, _core.ImpedanceSpectroscopy):
-                vars_to_declare.extend(("f", "z_real", "z_imag"))
-                if not step.dc_vs_ocv:
-                    vars_to_declare.extend(("e_ac", "e_dc", "i_ac", "i_dc"))
+                vars_to_declare.extend(("f", "z_real", "z_imag", "e_ac", "e_dc", "i_ac", "i_dc"))
                 if step.dc_vs_ocv and step.amplitude_V is not None:
                     vars_to_declare.extend(("ocp1", "v_ocp1"))
         return [f"var {var}" for var in dict.fromkeys(vars_to_declare)]
@@ -375,17 +373,19 @@ class _Renderer:
                     "set_pgstat_mode 3",
                     "meas_loop_ocp ocp1 200m 1",
                     "endloop",
-                    "store_var v_ocp1 10 ab",
+                    f"store_var v_ocp1 {self._ms_float(step.dc_potential_V or 0.0)} ab",
                     "add_var v_ocp1 ocp1",
                     "set_e v_ocp1",
                     "cell_on",
                     self._measurement_loop(
                         f"meas_loop_eis f z_real z_imag {self._ms_float(step.amplitude_V)} "
                         f"{self._ms_float(step.start_frequency_Hz)} "
-                        f"{self._ms_float(step.end_frequency_Hz)} {points}i v_ocp1",
-                        primary_vars=("f", "z_real", "z_imag"),
-                        include_time=False,
-                    ),
+                        f"{self._ms_float(step.end_frequency_Hz)} {points}i v_ocp1 "
+                        "eis_acdc(e_ac e_dc i_ac i_dc) time(t)",
+                        primary_vars=("f", "z_real", "z_imag", "e_ac", "e_dc", "i_ac", "i_dc"),
+                        potential_var="e_dc",
+                        current_var="i_dc",
+                        ),
                 ]
             return [
                 "# Potentiostatic EIS",
@@ -438,7 +438,7 @@ class _Renderer:
     ) -> str:
         body = [
             "pck_start",
-            *( ["pck_add t"] if include_time else [] ),
+            "pck_add t",
             *(f"pck_add {var}" for var in primary_vars),
             *(f"pck_add {self._var_name(var.var_type)}" for var in extra_vars),
             "pck_end",
@@ -704,7 +704,7 @@ def to_palmsens_methodscript(  # noqa: PLR0913
     _utils.validate_capacity_c_rates(protocol)
     _utils.tag_to_indices(protocol)
     _utils.check_for_intersecting_loops(protocol)
-    _validate_common(protocol, profile, channel, scan_step_voltage_V, eis_dc_potential_V)
+    _validate_common(protocol, profile, channel, scan_step_voltage_V)
     additional_measurements = _normalize_additional_measurements(additional_measurements, profile)
 
     renderer = _Renderer(
